@@ -8,6 +8,19 @@ else
     end)
 end
 
+-- rate-limit + type-check: applies the submix broadcast per sender so a
+-- modified client can't spam toggles at every player
+local lastSubmix = {}
+
 RegisterNetEvent('jraxion_megaphone:applySubmix', function(bool)
-    TriggerClientEvent('jraxion_megaphone:updateSubmixStatus', -1, bool, source)
+    local src = source
+    if type(bool) ~= 'boolean' then return end
+    local now = GetGameTimer()
+    if lastSubmix[src] and now - lastSubmix[src] < 250 then return end
+    lastSubmix[src] = now
+    TriggerClientEvent('jraxion_megaphone:updateSubmixStatus', -1, bool, src)
+end)
+
+AddEventHandler('playerDropped', function()
+    lastSubmix[source] = nil
 end)
